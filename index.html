@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171717">
+<meta name="description" content="Lokalny kalkulator kosztów i wycen druku 3D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Kalkulator kosztów druku 3D</title>
+<style>
+:root{color-scheme:dark;--bg:#101112;--panel:#1b1d20;--panel2:#24272b;--line:#34383e;--text:#f4f4f5;--muted:#a5aab2;--accent:#b8e36a;--accentText:#18210a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:720px;margin:auto;padding:20px 14px 48px}.brand{display:flex;align-items:center;gap:12px;margin:6px 0 20px}.logo{width:46px;height:46px;border-radius:14px;background:var(--accent);color:#17200a;display:grid;place-items:center;font-weight:900;font-size:18px}.brand h1{font-size:20px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px;letter-spacing:1.4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:13px 0}.card h2{font-size:15px;margin:0 0 14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{min-width:0}.field.full{grid-column:1/-1}label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}input,select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px;font:inherit;min-width:0}input:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}.tabs{display:flex;gap:8px;margin-bottom:14px}.tabs button,.actions button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:11px;padding:11px 13px;font:600 14px system-ui;cursor:pointer;flex:1}.tabs button.active{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
+.result{background:#20251a;border:1px solid #485632;border-radius:16px;padding:17px}.result .small{font-size:12px;color:#c3d1a9}.big{font-size:34px;font-weight:800;letter-spacing:-1px;color:var(--accent);margin:3px 0 10px}.line{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px}.line span:first-child{color:var(--muted)}.line.total{border-top:1px solid #485632;margin-top:6px;padding-top:12px;font-weight:700}.hint{color:var(--muted);font-size:12px;line-height:1.45}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:120px}.actions .primary{background:var(--accent);color:var(--accentText);border-color:var(--accent)}.history-item{border-top:1px solid var(--line);padding:11px 0}.history-item:first-child{border-top:0}.history-item strong{display:block}.history-item small{color:var(--muted)}.history-item button{float:right;background:transparent;color:#ffb4a9;border:0;padding:4px}.advanced{margin-top:13px;border-top:1px solid var(--line);padding-top:12px}.advanced summary{cursor:pointer;color:var(--muted);font-size:13px}.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
+@media(max-width:420px){main{padding:14px 11px 36px}.card{padding:14px}.big{font-size:30px}}
+</style>
+</head>
+<body>
+<main>
+<header class="brand"><div class="logo">3D</div><div><h1>Kalkulator druku 3D</h1><p>KOSZTY • AMORTYZACJA • WYCENA</p></div></header>
+
+<section class="card">
+<h2>1. Drukarka</h2>
+<div class="tabs"><button id="a1tab" class="active" onclick="choosePrinter('A1')">Bambu Lab A1</button><button id="a2tab" onclick="choosePrinter('A2L')">Bambu Lab A2L</button></div>
+<div class="grid">
+<div class="field"><label>Żywotność (godz.)</label><input id="life" type="number" min="1" step="100" value="5000"></div>
+</div>
+<details class="advanced"><summary>Ustawienia amortyzacji i koszt zakupu drukarki</summary><div class="grid" style="margin-top:12px"><div class="field full"><label>Cena zakupu drukarki (zł)</label><input id="machinePrice" type="number" min="0" step="0.01" value="1640"></div></div><p class="hint">Cena zakupu jest ukryta w tym rozwijanym panelu. Zmiana wpływa na amortyzację każdego wydruku.</p></details>
+<p class="hint" id="rateHint">Amortyzacja: 0,33 zł/h</p>
+</section>
+
+<section class="card">
+<h2>2. Dane wyceny</h2>
+<div class="grid">
+<div class="field full"><label>Dla kogo jest wycena? (firma lub osoba)</label><input id="client" type="text" maxlength="100" placeholder="Np. Jan Kowalski / Firma XYZ"></div>
+<div class="field full"><label>Co wyceniasz? (nazwa produktu / usługi)</label><input id="itemName" type="text" maxlength="140" placeholder="Np. Uchwyt do półki"></div>
+<div class="field"><label>Liczba sztuk</label><input id="quantity" type="number" min="1" step="1" value="1"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>3. Parametry wydruku</h2>
+<div class="grid">
+<div class="field"><label>Czas druku (godz.)</label><input id="hours" type="number" min="0" step="0.1" value="5"></div>
+<div class="field"><label>Zużycie filamentu (g)</label><input id="grams" type="number" min="0" step="0.1" value="100"></div>
+<div class="field"><label>Cena filamentu (zł/kg)</label><input id="filamentPrice" type="number" min="0" step="0.01" value="60"></div>
+<div class="field"><label>Średni pobór mocy (kW)</label><input id="power" type="number" min="0" step="0.01" value="0.15"></div>
+<div class="field"><label>Prąd (zł/kWh)</label><input id="electricity" type="number" min="0" step="0.01" value="1.54"></div>
+<div class="field"><label>Serwis / części (zł/h)</label><input id="service" type="number" min="0" step="0.01" value="0.15"></div>
+<div class="field full"><label>Dodatkowe koszty (zł) — np. opakowanie, klej</label><input id="extra" type="number" min="0" step="0.01" value="0"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>4. Cena sprzedaży</h2>
+<div class="grid">
+<div class="field"><label>Marża (%)</label><input id="margin" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label>Ręczna dopłata / rabat (zł)</label><input id="adjust" type="number" step="0.01" value="0"></div>
+</div>
+<p class="hint">Marża jest liczona jako narzut na koszt (koszt × procent), a dopłata/rabat dodawana jest na końcu.</p>
+</section>
+
+<section class="card">
+<div class="result">
+<div class="small">KOSZT WŁASNY WYDRUKU</div><div class="big" id="cost">13,10 zł</div>
+<div class="line"><span>Filament</span><strong id="rFilament">6,00 zł</strong></div>
+<div class="line"><span>Energia elektryczna</span><strong id="rPower">1,16 zł</strong></div>
+<div class="line"><span>Amortyzacja sprzętu</span><strong id="rAmort">1,50 zł</strong></div>
+<div class="line"><span>Rezerwa serwisowa</span><strong id="rService">0,75 zł</strong></div>
+<div class="line"><span>Dodatkowe koszty</span><strong id="rExtra">0,00 zł</strong></div>
+<div class="line total"><span>Cena po marży i korekcie</span><strong id="sale">13,10 zł</strong></div>
+</div>
+<div class="actions"><button class="primary" onclick="saveQuote()">Zapisz wycenę</button><button onclick="copyQuote()">Kopiuj wynik</button><button onclick="exportClientQuote()">Eksportuj dla klienta</button></div>
+<p class="hint">Plik dla klienta zawiera wyłącznie nazwę produktu, liczbę sztuk, cenę jednostkową i sumę. Nie pokazuje kosztów produkcji, marży, drukarki ani materiałów.</p>
+</section>
+
+<section class="card">
+<h2>5. Zapisane wyceny</h2>
+<div id="history"><p class="hint">Nie zapisano jeszcze żadnych wycen.</p></div>
+<div class="actions"><button onclick="clearHistory()">Wyczyść historię</button><button onclick="exportData()">Eksportuj dane</button></div>
+<p class="hint">Ustawienia i historia są przechowywane lokalnie w pamięci tej przeglądarki na tym urządzeniu.</p>
+</section>
+<p class="footer">Działa lokalnie po zapisaniu pliku • bez konta i abonamentu</p>
+</main>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+const ids=['machinePrice','life','hours','grams','filamentPrice','power','electricity','service','extra','margin','adjust','quantity','itemName','client'];
+let printer='A1', historyData=[];
+const $=id=>document.getElementById(id), val=id=>Math.max(0,Number($(id).value)||0);
+const money=n=>n.toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2})+' zł';
+function load(){try{const s=JSON.parse(localStorage.getItem('dakaluba_settings')||'{}');ids.forEach(id=>{if(s[id]!==undefined)$(id).value=s[id]});printer=s.printer||'A1';if(s.quantity===undefined)$('quantity').value='1';historyData=JSON.parse(localStorage.getItem('dakaluba_history')||'[]')}catch(e){};choosePrinter(printer,false);render()}
+function persist(){const s={printer};ids.forEach(id=>s[id]=$(id).value);localStorage.setItem('dakaluba_settings',JSON.stringify(s))}
+function choosePrinter(p,reset=true){printer=p;$('a1tab').classList.toggle('active',p==='A1');$('a2tab').classList.toggle('active',p==='A2L');if(reset)$('machinePrice').value=p==='A1'?'1640':'2029';calculate()}
+function calculate(){const h=val('hours'), life=Math.max(1,val('life')), rate=val('machinePrice')/life;
+const filament=val('grams')*val('filamentPrice')/1000, power=h*val('power')*val('electricity'), amort=h*rate, service=h*val('service'), extra=val('extra');
+const cost=filament+power+amort+service+extra, sale=Math.max(0,cost*(1+val('margin')/100)+(Number($('adjust').value)||0)), quantity=Math.max(1,Math.floor(val('quantity')||1)), totalSale=sale*quantity;
+$('rateHint').textContent='Amortyzacja: '+money(rate)+'/h';$('cost').textContent=money(cost);$('rFilament').textContent=money(filament);$('rPower').textContent=money(power);$('rAmort').textContent=money(amort);$('rService').textContent=money(service);$('rExtra').textContent=money(extra);$('sale').textContent=money(totalSale);
+persist();return {printer,client:$('client').value.trim(),itemName:$('itemName').value.trim(),quantity,h,grams:val('grams'),cost,unitSale:sale,sale:totalSale,filament,power,amort,service,extra,rate}}
+function saveQuote(){const r=calculate();historyData.unshift({...r,date:new Date().toLocaleString('pl-PL')});historyData=historyData.slice(0,50);localStorage.setItem('dakaluba_history',JSON.stringify(historyData));render()}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){if(!historyData.length){$('history').innerHTML='<p class="hint">Nie zapisano jeszcze żadnych wycen.</p>';return}
+$('history').innerHTML=historyData.map((x,i)=>`<div class="history-item"><button onclick="removeQuote(${i})">Usuń</button><strong>${escapeHtml(x.client||'Bez przypisanego klienta')} · ${escapeHtml(x.itemName||'Wycena')} • ${money(x.sale)}</strong><small>${x.date} · ${x.quantity||1} szt. · ${x.h} h · ${x.grams} g · koszt ${money(x.cost)}</small></div>`).join('')}
+function removeQuote(i){historyData.splice(i,1);localStorage.setItem('dakaluba_history',JSON.stringify(historyData));render()}
+function clearHistory(){if(confirm('Usunąć całą historię wycen?')){historyData=[];localStorage.setItem('dakaluba_history','[]');render()}}
+function copyQuote(){const r=calculate(),t=`Kalkulator druku 3D — wycena\nDla: ${r.client||'nie podano'}\nDrukarka: ${r.printer}\nCzas: ${r.h} h\nFilament: ${money(r.filament)}\nPrąd: ${money(r.power)}\nAmortyzacja: ${money(r.amort)}\nSerwis: ${money(r.service)}\nDodatkowe: ${money(r.extra)}\nKoszt własny: ${money(r.cost)}\nCena po marży/korekcie: ${money(r.sale)}`;navigator.clipboard?.writeText(t).then(()=>alert('Skopiowano kalkulację.')).catch(()=>alert(t))}
+
+function exportClientQuote(){
+ const r=calculate(), client=r.client||'Klient', item=r.itemName||'Wydruk 3D', qty=r.quantity||1, unit=r.unitSale||0, total=r.sale||0;
+ const date=new Date().toLocaleDateString('pl-PL');
+ const doc=`<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wycena</title><style>
+ body{font-family:Arial,sans-serif;color:#202124;margin:0;padding:36px;background:#f5f5f5}.sheet{max-width:760px;margin:auto;background:white;padding:42px;border-radius:12px;box-shadow:0 4px 24px #0001}h1{margin:0 0 6px;font-size:28px}.muted{color:#666;font-size:14px}.meta{margin:28px 0}.meta strong{display:block;margin-top:5px}table{width:100%;border-collapse:collapse;margin:28px 0}th,td{padding:14px 10px;border-bottom:1px solid #ddd;text-align:left}th{color:#555;font-size:13px}td.num,th.num{text-align:right}.total{text-align:right;font-size:20px;font-weight:bold;margin-top:24px}.foot{margin-top:48px;color:#777;font-size:12px}@media print{body{background:white;padding:0}.sheet{box-shadow:none;border-radius:0;padding:20px}}
+ </style></head><body><main class="sheet"><h1>Wycena</h1><div class="muted">Data: ${escapeHtml(date)}</div><div class="meta">Dla:<strong>${escapeHtml(client)}</strong></div><table><thead><tr><th>Produkt / usługa</th><th class="num">Ilość</th><th class="num">Cena jednostkowa</th><th class="num">Wartość</th></tr></thead><tbody><tr><td>${escapeHtml(item)}</td><td class="num">${qty} szt.</td><td class="num">${money(unit)}</td><td class="num">${money(total)}</td></tr></tbody></table><div class="total">Razem do zapłaty: ${money(total)}</div><div class="foot">Dziękujemy za zapytanie.</div></main></body></html>`;
+ const blob=new Blob([doc],{type:'text/html;charset=utf-8'}), url=URL.createObjectURL(blob), a=document.createElement('a');a.href=url;a.download='wycena-dla-klienta.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function exportData(){const blob=new Blob([JSON.stringify({settings:JSON.parse(localStorage.getItem('dakaluba_settings')||'{}'),history:historyData},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dakaluba3d-dane.json';a.click();URL.revokeObjectURL(a.href)}
+ids.forEach(id=>$(id).addEventListener('input',calculate));load();
+</script>
+</body></html>

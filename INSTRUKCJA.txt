@@ -1,0 +1,24 @@
+KALKULATOR DRUKU 3D — PAKIET APLIKACJI
+
+W paczce jest:
+- index.html — kalkulator z przesłanego pliku,
+- manifest.webmanifest — dane instalowanej aplikacji,
+- sw.js — pamięć podręczna do działania offline,
+- icons/ — ikony aplikacji.
+
+WAŻNE:
+Aby Android/Chrome pozwolił zainstalować PWA i aby Service Worker działał,
+pliki muszą być otwarte z adresu HTTPS (albo localhost). Samo otwarcie
+index.html z menedżera plików uruchomi kalkulator, ale nie zapewni pełnej
+instalacji PWA/offline.
+
+Darmowa metoda:
+1. Wgraj zawartość tego folderu do repozytorium GitHub.
+2. W repozytorium wybierz Settings -> Pages.
+3. Włącz publikację z gałęzi main, katalog / (root).
+4. Otwórz podany adres HTTPS w Chrome na telefonie.
+5. W menu Chrome wybierz „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”.
+
+Dane kalkulatora (ustawienia i historia) są przechowywane w pamięci przeglądarki
+na urządzeniu. Wyczyść dane witryny = możesz utracić historię. Używaj przycisku
+„Eksportuj dane”, aby robić kopię zapasową.
